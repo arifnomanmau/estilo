@@ -13,7 +13,8 @@ export default function Navigation() {
     { href: "/", label: "Home" },
     { href: "/portfolio", label: "Portfolio" },
     { href: "/calculator", label: "Calculator" },
-    { href: "/contact", label: "Contact" }
+    { href: "/contact", label: "Contact" },
+    { href: "/admin", label: "Admin", adminOnly: true }
   ];
 
   const NavLinks = () => (

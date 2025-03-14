@@ -8,6 +8,7 @@ import Home from "@/pages/Home";
 import Portfolio from "@/pages/Portfolio";
 import Calculator from "@/pages/Calculator";
 import Contact from "@/pages/Contact";
+import Dashboard from "@/pages/admin/Dashboard";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,6 +18,7 @@ function Router() {
       <Route path="/portfolio" component={Portfolio} />
       <Route path="/calculator" component={Calculator} />
       <Route path="/contact" component={Contact} />
+      <Route path="/admin" component={Dashboard} />
       <Route component={NotFound} />
     </Switch>
   );

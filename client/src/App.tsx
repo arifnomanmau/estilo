@@ -6,6 +6,7 @@ import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Portfolio from "./pages/Portfolio";
+import Calculator from "./pages/Calculator";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/not-found";
 
@@ -14,6 +15,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/portfolio" component={Portfolio} />
+      <Route path="/calculator" component={Calculator} />
       <Route path="/contact" component={Contact} />
       <Route component={NotFound} />
     </Switch>

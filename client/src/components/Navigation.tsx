@@ -12,6 +12,7 @@ export default function Navigation() {
   const links = [
     { href: "/", label: "Home" },
     { href: "/portfolio", label: "Portfolio" },
+    { href: "/calculator", label: "Calculator" },
     { href: "/contact", label: "Contact" }
   ];
 

@@ -3,15 +3,23 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertTestimonialSchema, insertPortfolioItemSchema } from "@shared/schema";
 import { z } from "zod";
+import { setupAuth } from "./auth";
 
-// Simplified admin check - for demo purposes
-const isAdmin = async (_req: Request, res: Response, next: Function) => {
-  // For demo purposes, we'll allow all admin actions
-  // In a real app, this would check session/token
+// Admin middleware
+const isAdmin = (req: Request, res: Response, next: Function) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+  if (!req.user?.isAdmin) {
+    return res.status(403).json({ message: "Not authorized" });
+  }
   next();
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication routes
+  setupAuth(app);
+
   // Testimonial routes
   app.get("/api/testimonials", async (_req, res) => {
     const testimonials = await storage.getTestimonials();

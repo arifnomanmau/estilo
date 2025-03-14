@@ -20,6 +20,7 @@ const testimonialSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   role: z.string().min(2, "Role must be at least 2 characters"),
   content: z.string().min(10, "Content must be at least 10 characters"),
+  imageUrl: z.string().url("Must be a valid URL"),
 });
 
 type FormValues = z.infer<typeof testimonialSchema>;
@@ -32,6 +33,7 @@ export default function TestimonialForm() {
       name: "",
       role: "",
       content: "",
+      imageUrl: "",
     },
   });
 
@@ -81,6 +83,20 @@ export default function TestimonialForm() {
               <FormLabel>Role</FormLabel>
               <FormControl>
                 <Input placeholder="Client role or company" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="imageUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Profile Image URL</FormLabel>
+              <FormControl>
+                <Input placeholder="https://example.com/image.jpg" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

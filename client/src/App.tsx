@@ -2,13 +2,13 @@ import { Switch, Route } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
-import Navigation from "./components/Navigation";
-import Footer from "./components/Footer";
-import Home from "./pages/Home";
-import Portfolio from "./pages/Portfolio";
-import Calculator from "./pages/Calculator";
-import Contact from "./pages/Contact";
-import NotFound from "./pages/not-found";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
+import Home from "@/pages/Home";
+import Portfolio from "@/pages/Portfolio";
+import Calculator from "@/pages/Calculator";
+import Contact from "@/pages/Contact";
+import NotFound from "@/pages/not-found";
 
 function Router() {
   return (

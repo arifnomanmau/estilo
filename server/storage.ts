@@ -4,6 +4,11 @@ import {
   portfolioItems, type PortfolioItem, type InsertPortfolioItem
 } from "@shared/schema";
 
+// Add Consultation types here (These need to be defined elsewhere and imported)
+type Consultation = {id:number; status: string; createdAt: Date;} & any; // Replace 'any' with actual consultation properties
+type InsertConsultation = Omit<Consultation, 'id' | 'status' | 'createdAt'>;
+
+
 export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
@@ -21,6 +26,12 @@ export interface IStorage {
   getPortfolioItem(id: number): Promise<PortfolioItem | undefined>;
   createPortfolioItem(item: InsertPortfolioItem): Promise<PortfolioItem>;
   deletePortfolioItem(id: number): Promise<boolean>;
+
+  // Consultation operations
+  getConsultations(): Promise<Consultation[]>;
+  getConsultation(id: number): Promise<Consultation | undefined>;
+  createConsultation(consultation: InsertConsultation): Promise<Consultation>;
+  updateConsultationStatus(id: number, status: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -30,6 +41,8 @@ export class MemStorage implements IStorage {
   private currentId: number;
   private testimonialId: number;
   private portfolioId: number;
+  private consultationMap: Map<number, Consultation>;
+  private consultationId: number;
 
   constructor() {
     this.users = new Map();
@@ -38,6 +51,8 @@ export class MemStorage implements IStorage {
     this.currentId = 1;
     this.testimonialId = 1;
     this.portfolioId = 1;
+    this.consultationMap = new Map();
+    this.consultationId = 1;
   }
 
   // User methods
@@ -104,6 +119,35 @@ export class MemStorage implements IStorage {
 
   async deletePortfolioItem(id: number): Promise<boolean> {
     return this.portfolioMap.delete(id);
+  }
+
+  // Consultation methods
+  async getConsultations(): Promise<Consultation[]> {
+    return Array.from(this.consultationMap.values());
+  }
+
+  async getConsultation(id: number): Promise<Consultation | undefined> {
+    return this.consultationMap.get(id);
+  }
+
+  async createConsultation(consultation: InsertConsultation): Promise<Consultation> {
+    const id = this.consultationId++;
+    const newConsultation: Consultation = {
+      ...consultation,
+      id,
+      status: "pending",
+      createdAt: new Date(),
+    };
+    this.consultationMap.set(id, newConsultation);
+    return newConsultation;
+  }
+
+  async updateConsultationStatus(id: number, status: string): Promise<boolean> {
+    const consultation = this.consultationMap.get(id);
+    if (!consultation) return false;
+
+    this.consultationMap.set(id, { ...consultation, status });
+    return true;
   }
 }
 

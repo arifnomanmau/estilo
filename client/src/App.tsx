@@ -13,6 +13,7 @@ import Contact from "@/pages/Contact";
 import AuthPage from "@/pages/auth/AuthPage";
 import Dashboard from "@/pages/admin/Dashboard";
 import NotFound from "@/pages/not-found";
+import Booking from "@/pages/Booking"; // Added import
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/portfolio" component={Portfolio} />
       <Route path="/calculator" component={Calculator} />
+      <Route path="/booking" component={Booking} />
       <Route path="/contact" component={Contact} />
       <Route path="/auth" component={AuthPage} />
       <ProtectedRoute path="/admin" component={Dashboard} />

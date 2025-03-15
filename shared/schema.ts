@@ -45,9 +45,31 @@ export const insertPortfolioItemSchema = createInsertSchema(portfolioItems).omit
   createdAt: true,
 });
 
+// Add the consultation schema after the existing schemas
+export const consultations = pgTable("consultations", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  date: timestamp("date").notNull(),
+  projectType: text("project_type").notNull(),
+  requirements: text("requirements").notNull(),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Add consultation schemas after existing schemas
+export const insertConsultationSchema = createInsertSchema(consultations).omit({
+  id: true,
+  status: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Testimonial = typeof testimonials.$inferSelect;
 export type InsertTestimonial = z.infer<typeof insertTestimonialSchema>;
 export type PortfolioItem = typeof portfolioItems.$inferSelect;
 export type InsertPortfolioItem = z.infer<typeof insertPortfolioItemSchema>;
+export type Consultation = typeof consultations.$inferSelect;
+export type InsertConsultation = z.infer<typeof insertConsultationSchema>;

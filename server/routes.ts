@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertTestimonialSchema, insertPortfolioItemSchema } from "@shared/schema";
+import { insertTestimonialSchema, insertPortfolioItemSchema, insertConsultationSchema } from "@shared/schema";
 import { z } from "zod";
 import { setupAuth } from "./auth";
 
@@ -77,6 +77,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Portfolio item deleted" });
     } else {
       res.status(404).json({ message: "Portfolio item not found" });
+    }
+  });
+
+  // Consultation routes
+  app.get("/api/consultations", isAdmin, async (_req, res) => {
+    const consultations = await storage.getConsultations();
+    res.json(consultations);
+  });
+
+  app.post("/api/consultations", async (req, res) => {
+    try {
+      const consultation = insertConsultationSchema.parse(req.body);
+      const newConsultation = await storage.createConsultation(consultation);
+      res.json(newConsultation);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid consultation data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Server error" });
+      }
+    }
+  });
+
+  app.patch("/api/consultations/:id/status", isAdmin, async (req, res) => {
+    const id = parseInt(req.params.id);
+    const { status } = req.body;
+
+    if (!["pending", "confirmed", "completed"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const success = await storage.updateConsultationStatus(id, status);
+    if (success) {
+      res.json({ message: "Consultation status updated" });
+    } else {
+      res.status(404).json({ message: "Consultation not found" });
     }
   });
 

@@ -4,60 +4,24 @@ import ProjectCard from "@/components/ProjectCard";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-
-const featuredProjects = [
-  {
-    image: "https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e",
-    title: "Modern Minimalist Living",
-    description: "A contemporary approach to minimalist living spaces."
-  },
-  {
-    image: "https://images.unsplash.com/photo-1524758631624-e2822e304c36",
-    title: "Luxury Bedroom Suite",
-    description: "Elegant bedroom design with premium materials."
-  },
-  {
-    image: "https://images.unsplash.com/photo-1505843490538-5133c6c7d0e1",
-    title: "Urban Kitchen Design",
-    description: "Modern kitchen with state-of-the-art appliances."
-  },
-  {
-    image: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb3",
-    title: "Contemporary Office Space",
-    description: "Professional workspace with modern aesthetics."
-  },
-  {
-    image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c",
-    title: "Luxurious Bathroom",
-    description: "Spa-like bathroom with premium fixtures."
-  },
-  {
-    image: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3",
-    title: "Outdoor Living Area",
-    description: "Seamless indoor-outdoor living space."
-  },
-  {
-    image: "https://images.unsplash.com/photo-1600573472550-8090733b531d",
-    title: "Dining Room Elegance",
-    description: "Sophisticated dining area design."
-  },
-  {
-    image: "https://images.unsplash.com/photo-1600585152220-90363fe7e115",
-    title: "Home Theater",
-    description: "Custom entertainment space design."
-  },
-  {
-    image: "https://images.unsplash.com/photo-1600607687126-c09171a4f965",
-    title: "Children's Room",
-    description: "Playful and practical kids' room design."
-  }
-];
+import { useQuery } from "@tanstack/react-query";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Testimonial, PortfolioItem } from "@shared/schema";
 
 export default function Home() {
   const [visibleProjects, setVisibleProjects] = useState(6);
 
+  const { data: portfolioItems = [] } = useQuery<PortfolioItem[]>({
+    queryKey: ["/api/portfolio"],
+  });
+
+  const { data: testimonials = [] } = useQuery<Testimonial[]>({
+    queryKey: ["/api/testimonials"],
+  });
+
   const showMoreProjects = () => {
-    setVisibleProjects(featuredProjects.length);
+    setVisibleProjects(portfolioItems.length);
   };
 
   return (
@@ -65,7 +29,8 @@ export default function Home() {
       <HeroSection />
       <ServicesSection />
 
-      <section className="py-20">
+      {/* Featured Projects Section */}
+      <section className="py-20 bg-gray-50">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -74,19 +39,37 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl font-bold mb-4">Featured Projects</h2>
+            <h2 className="text-3xl font-bold mb-4">Our Latest Projects</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Explore some of our recent interior design projects and get inspired.
+              Explore our recent interior design projects that showcase our expertise and creativity.
             </p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {featuredProjects.slice(0, visibleProjects).map((project, index) => (
-              <ProjectCard key={index} {...project} />
+            {portfolioItems.slice(0, visibleProjects).map((project) => (
+              <motion.div
+                key={project.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+              >
+                <Card className="overflow-hidden">
+                  <img 
+                    src={project.imageUrl} 
+                    alt={project.title}
+                    className="w-full h-64 object-cover"
+                  />
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold mb-2">{project.title}</h3>
+                    <p className="text-gray-600">{project.description}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
           </div>
 
-          {visibleProjects < featuredProjects.length && (
+          {visibleProjects < portfolioItems.length && (
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -103,6 +86,48 @@ export default function Home() {
               </Button>
             </motion.div>
           )}
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl font-bold mb-4">Client Testimonials</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              See what our clients have to say about their experience working with us.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {testimonials.map((testimonial) => (
+              <motion.div
+                key={testimonial.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+              >
+                <Card>
+                  <CardContent className="p-6 text-center">
+                    <Avatar className="w-20 h-20 mx-auto mb-4">
+                      <AvatarImage src={testimonial.imageUrl} alt={testimonial.name} />
+                      <AvatarFallback>{testimonial.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <p className="text-gray-600 mb-4 italic">"{testimonial.content}"</p>
+                    <h4 className="font-semibold">{testimonial.name}</h4>
+                    <p className="text-sm text-gray-500">{testimonial.role}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
     </div>

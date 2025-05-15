@@ -36,9 +36,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const getInitialUser = (): SelectUser | null => {
     try {
       const storedUser = localStorage.getItem('user');
-      return storedUser ? JSON.parse(storedUser) : null;
+      if (!storedUser) {
+        return null;
+      }
+      
+      const parsedUser = JSON.parse(storedUser);
+      
+      // Validate that the user object has the expected structure
+      if (parsedUser && typeof parsedUser === 'object' && 
+          'id' in parsedUser && 
+          'username' in parsedUser && 
+          'isAdmin' in parsedUser) {
+        console.log('Loaded user from localStorage:', parsedUser.username);
+        return parsedUser;
+      } else {
+        console.warn('Invalid user data in localStorage, clearing it');
+        localStorage.removeItem('user');
+        return null;
+      }
     } catch (e) {
       console.error('Error retrieving stored user:', e);
+      // Clear potentially corrupted data
+      localStorage.removeItem('user');
       return null;
     }
   };

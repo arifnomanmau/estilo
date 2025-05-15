@@ -125,4 +125,145 @@ async function testAdminLogin() {
   }
 }
 
-testAdminLogin(); 
+testAdminLogin();
+
+// Script to test admin login and API connections
+import https from 'https';
+import crypto from 'crypto';
+
+// Configuration
+const config = {
+  credentials: {
+    username: 'admin',
+    password: 'admin123'
+  },
+  api: {
+    // Try both direct and nested auth endpoints
+    directUrl: 'https://estilo-ashy.vercel.app/api/login',
+    nestedUrl: 'https://estilo-ashy.vercel.app/api/auth/login'
+  }
+};
+
+// Display configuration
+console.log('🔍 Admin Login Test Configuration:');
+console.log(`Username: ${config.credentials.username}`);
+console.log(`Password: ${'*'.repeat(config.credentials.password.length)}`);
+console.log(`Direct API Endpoint: ${config.api.directUrl}`);
+console.log(`Nested API Endpoint: ${config.api.nestedUrl}`);
+console.log('\n');
+
+// Test hash generation (matching seed-admin.js)
+const hashedPassword = crypto.createHash('sha256').update(config.credentials.password).digest('hex');
+console.log('💡 Admin Password Hash Info:');
+console.log(`SHA-256 Hash: ${hashedPassword}`);
+console.log('\n');
+
+// Helper function to make a POST request
+function makePostRequest(url, data) {
+  return new Promise((resolve, reject) => {
+    const postData = JSON.stringify(data);
+    
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': postData.length
+      }
+    };
+    
+    const req = https.request(url, options, (res) => {
+      let responseData = '';
+      
+      res.on('data', (chunk) => {
+        responseData += chunk;
+      });
+      
+      res.on('end', () => {
+        console.log(`📊 Response Status: ${res.statusCode} ${res.statusMessage}`);
+        try {
+          const parsedData = responseData ? JSON.parse(responseData) : {};
+          resolve({
+            status: res.statusCode,
+            headers: res.headers,
+            data: parsedData
+          });
+        } catch (error) {
+          console.log('❌ Error parsing response:', error.message);
+          console.log('Raw response:', responseData);
+          resolve({
+            status: res.statusCode,
+            headers: res.headers,
+            data: null,
+            rawResponse: responseData
+          });
+        }
+      });
+    });
+    
+    req.on('error', (error) => {
+      console.error('❌ Request error:', error.message);
+      reject(error);
+    });
+    
+    req.write(postData);
+    req.end();
+  });
+}
+
+// Test the direct endpoint
+async function testDirectEndpoint() {
+  console.log('🔑 Testing direct login endpoint:');
+  try {
+    const response = await makePostRequest(config.api.directUrl, config.credentials);
+    console.log('Response Data:', JSON.stringify(response.data, null, 2));
+    console.log('\n');
+    return response;
+  } catch (error) {
+    console.error('Error testing direct endpoint:', error.message);
+    console.log('\n');
+    return null;
+  }
+}
+
+// Test the nested auth endpoint
+async function testNestedEndpoint() {
+  console.log('🔑 Testing nested auth login endpoint:');
+  try {
+    const response = await makePostRequest(config.api.nestedUrl, config.credentials);
+    console.log('Response Data:', JSON.stringify(response.data, null, 2));
+    console.log('\n');
+    return response;
+  } catch (error) {
+    console.error('Error testing nested endpoint:', error.message);
+    console.log('\n');
+    return null;
+  }
+}
+
+// Run the tests
+async function runTests() {
+  console.log('🚀 Starting Admin Login API Tests\n');
+  
+  const directResult = await testDirectEndpoint();
+  const nestedResult = await testNestedEndpoint();
+  
+  console.log('📋 Test Summary:');
+  console.log(`Direct Endpoint (/api/login): ${directResult ? directResult.status === 200 ? '✅ SUCCESS' : '❌ FAILED' : '❌ ERROR'}`);
+  console.log(`Nested Endpoint (/api/auth/login): ${nestedResult ? nestedResult.status === 200 ? '✅ SUCCESS' : '❌ FAILED' : '❌ ERROR'}`);
+  
+  if (directResult?.status === 200 || nestedResult?.status === 200) {
+    console.log('\n✅ LOGIN TEST PASSED - At least one endpoint is working correctly');
+    
+    // Show which endpoint to use
+    if (directResult?.status === 200) {
+      console.log('👉 RECOMMENDATION: Use the direct endpoint (/api/login) in your config.ts');
+    } else {
+      console.log('👉 RECOMMENDATION: Use the nested endpoint (/api/auth/login) in your config.ts');
+    }
+  } else {
+    console.log('\n❌ LOGIN TEST FAILED - Both endpoints returned errors');
+  }
+}
+
+// Execute tests
+runTests(); 

@@ -1,7 +1,15 @@
 {
   "version": 2,
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api" },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api",
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Accept"
+      }
+    },
     { "src": "/assets/(.*)", "dest": "/assets/$1" },
     { "src": "/(.*)\\.js", "dest": "/$1.js" },
     { "src": "/(.*)\\.css", "dest": "/$1.css" },
@@ -16,6 +24,9 @@
       "memory": 1024,
       "maxDuration": 10
     }
+  },
+  "env": {
+    "NODE_ENV": "production"
   },
   "buildCommand": "npm run build"
 }

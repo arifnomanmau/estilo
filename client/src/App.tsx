@@ -11,6 +11,7 @@ import Calculator from "@/pages/Calculator";
 import Contact from "@/pages/Contact";
 import AuthPage from "@/pages/auth/AuthPage";
 import Dashboard from "@/pages/admin/Dashboard";
+import Login from "@/pages/admin/Login";
 import NotFound from "@/pages/not-found";
 import Booking from "@/pages/Booking"; // Added import
 
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/booking" component={Booking} />
       <Route path="/contact" component={Contact} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/admin/login" component={Login} />
       <ProtectedRoute path="/admin" component={Dashboard} />
       <Route path="/admin/dashboard">
         {() => <Redirect to="/admin" />}

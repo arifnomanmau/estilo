@@ -43,6 +43,29 @@ export default function Login() {
       console.log("Attempting login with:", validatedData.username);
       console.log("Using login endpoint:", API_PATHS.LOGIN);
       
+      // Debug: Try both API paths
+      try {
+        // First try the original direct endpoint as fallback
+        console.log("Trying direct endpoint /api/login as fallback...");
+        const directResult = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validatedData)
+        });
+        console.log("Direct endpoint status:", directResult.status);
+        
+        // Then try the auth nested endpoint
+        console.log("Trying nested endpoint /api/auth/login...");
+        const nestedResult = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(validatedData)
+        });
+        console.log("Nested endpoint status:", nestedResult.status);
+      } catch (debugError) {
+        console.error("Debug error:", debugError);
+      }
+      
       try {
         // Try logging in through the auth hook - this should set all user data correctly
         const result = await loginMutation.mutateAsync(validatedData);
@@ -56,13 +79,19 @@ export default function Login() {
             description: "Welcome to the admin dashboard",
           });
           
-          // Set a timeout to ensure state has time to update
+          // Force store user data to localStorage first to ensure persistence
+          localStorage.setItem('user', JSON.stringify(result));
+          
+          // Then navigate to admin page
+          navigate("/admin");
+          
+          // Fallback - if navigation doesn't work, try direct URL change after a delay
           setTimeout(() => {
-            // Force refresh the stored user data
-            localStorage.setItem('user', JSON.stringify(result));
-            // Navigate to the admin page
-            navigate("/admin");
-          }, 100);
+            if (window.location.pathname !== "/admin") {
+              console.log("Fallback: direct URL navigation to /admin");
+              window.location.href = "/admin";
+            }
+          }, 500);
         } else {
           console.error("User is not an admin:", result);
           setErrorMessage("You must be an admin to access this page");
@@ -84,6 +113,8 @@ export default function Login() {
           errorMsg = "Server error. Please try again later.";
         } else if (errorMsg.includes("Network") || errorMsg.includes("fetch")) {
           errorMsg = "Network error. Please check your connection.";
+        } else if (errorMsg.includes("404")) {
+          errorMsg = "API endpoint not found. This may be a configuration issue.";
         }
         
         setErrorMessage(errorMsg);

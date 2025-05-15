@@ -17,7 +17,22 @@ export function ProtectedRoute({
   const [, setLocation] = useLocation();
   const [authChecked, setAuthChecked] = useState(false);
   const [timeoutReached, setTimeoutReached] = useState(false);
+  const [localUser, setLocalUser] = useState<any>(null);
   const [debugMode] = useState(process.env.NODE_ENV === 'development');
+
+  // Check localStorage for user data as a fallback
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const userData = JSON.parse(storedUser);
+        setLocalUser(userData);
+        console.log('Found user in localStorage:', userData);
+      }
+    } catch (e) {
+      console.error('Error reading user from localStorage:', e);
+    }
+  }, []);
 
   // Set a timeout for authentication check
   useEffect(() => {
@@ -40,10 +55,15 @@ export function ProtectedRoute({
           id: user.id, 
           username: user.username, 
           isAdmin: user.isAdmin 
-        } : null 
+        } : null,
+        localUser: localUser ? {
+          id: localUser.id,
+          username: localUser.username,
+          isAdmin: localUser.isAdmin
+        } : null
       });
     }
-  }, [debugMode, path, user, isLoading, authChecked, timeoutReached]);
+  }, [debugMode, path, user, localUser, isLoading, authChecked, timeoutReached]);
 
   // Check authentication status once it's no longer loading
   useEffect(() => {
@@ -52,11 +72,15 @@ export function ProtectedRoute({
     }
   }, [isLoading]);
 
+  // Determine if the user is authenticated and has the required permissions
+  const isAuthenticated = user !== null || localUser !== null;
+  const hasAdminAccess = (user && user.isAdmin) || (localUser && localUser.isAdmin);
+
   return (
     <Route path={path}>
       {() => {
         // Still loading and timeout not reached
-        if (isLoading && !timeoutReached) {
+        if (isLoading && !timeoutReached && !isAuthenticated) {
           return (
             <div className="flex flex-col items-center justify-center min-h-screen">
               <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
@@ -67,28 +91,26 @@ export function ProtectedRoute({
         }
 
         // Loading timeout reached, but still not authenticated
-        if (isLoading && timeoutReached) {
+        if ((isLoading && timeoutReached && !isAuthenticated) || (!isLoading && !isAuthenticated)) {
           return (
             <div className="flex flex-col items-center justify-center min-h-screen">
-              <p className="text-amber-600 mb-4">Authentication is taking longer than expected.</p>
+              <p className="text-amber-600 mb-4">Please log in to access this page</p>
               <button 
-                onClick={() => setLocation("/auth")}
-                className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+                onClick={() => {
+                  console.log('Redirecting to login page');
+                  setLocation("/admin/login");
+                }}
+                className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 mb-4"
               >
-                Go to Login
+                Go to Admin Login
               </button>
               {debugMode && <div className="mt-4"><AuthDebug /></div>}
             </div>
           );
         }
 
-        // Authentication check complete, but not authenticated
-        if (authChecked && !user) {
-          return <Redirect to="/auth" />;
-        }
-
         // Authenticated, but not admin (when adminOnly is true)
-        if (adminOnly && user && user.isAdmin === false) {
+        if (adminOnly && isAuthenticated && !hasAdminAccess) {
           return (
             <div className="flex flex-col items-center justify-center min-h-screen">
               <p className="text-red-600 mb-4">You need admin privileges to access this page.</p>

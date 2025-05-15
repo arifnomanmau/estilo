@@ -246,7 +246,21 @@ export default function Dashboard() {
 
   // Redirect non-admin users
   useEffect(() => {
-    if (!isLoading && !user?.isAdmin) {
+    console.log('Dashboard auth check:', { 
+      isLoading, 
+      user: user ? { id: user.id, username: user.username, isAdmin: user.isAdmin } : null 
+    });
+    
+    if (!isLoading && user === null) {
+      console.log('Redirecting to auth: No user found');
+      setLocation("/auth");
+      toast({
+        variant: "destructive",
+        title: "Authentication Required",
+        description: "You must login to access the admin dashboard.",
+      });
+    } else if (!isLoading && user && user.isAdmin === false) {
+      console.log('Redirecting to home: User is not admin');
       setLocation("/");
       toast({
         variant: "destructive",

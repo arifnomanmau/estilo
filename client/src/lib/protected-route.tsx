@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Route, Redirect, useLocation } from "wouter";
 import React, { useEffect, useState } from "react";
+import { AuthDebug } from "@/components/AuthDebug";
 
 export function ProtectedRoute({
   path,
@@ -16,6 +17,7 @@ export function ProtectedRoute({
   const [, setLocation] = useLocation();
   const [authChecked, setAuthChecked] = useState(false);
   const [timeoutReached, setTimeoutReached] = useState(false);
+  const [debugMode] = useState(process.env.NODE_ENV === 'development');
 
   // Set a timeout for authentication check
   useEffect(() => {
@@ -25,6 +27,23 @@ export function ProtectedRoute({
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Log authentication state changes in development
+  useEffect(() => {
+    if (debugMode) {
+      console.log('Protected Route Auth State:', { 
+        path, 
+        isLoading, 
+        authChecked, 
+        timeoutReached,
+        user: user ? { 
+          id: user.id, 
+          username: user.username, 
+          isAdmin: user.isAdmin 
+        } : null 
+      });
+    }
+  }, [debugMode, path, user, isLoading, authChecked, timeoutReached]);
 
   // Check authentication status once it's no longer loading
   useEffect(() => {
@@ -42,6 +61,7 @@ export function ProtectedRoute({
             <div className="flex flex-col items-center justify-center min-h-screen">
               <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
               <p className="text-gray-600">Verifying authentication...</p>
+              {debugMode && <div className="mt-4"><AuthDebug /></div>}
             </div>
           );
         }
@@ -57,6 +77,7 @@ export function ProtectedRoute({
               >
                 Go to Login
               </button>
+              {debugMode && <div className="mt-4"><AuthDebug /></div>}
             </div>
           );
         }
@@ -67,7 +88,7 @@ export function ProtectedRoute({
         }
 
         // Authenticated, but not admin (when adminOnly is true)
-        if (adminOnly && user && !user.isAdmin) {
+        if (adminOnly && user && user.isAdmin === false) {
           return (
             <div className="flex flex-col items-center justify-center min-h-screen">
               <p className="text-red-600 mb-4">You need admin privileges to access this page.</p>
@@ -77,12 +98,22 @@ export function ProtectedRoute({
               >
                 Return to Home
               </button>
+              {debugMode && <div className="mt-4"><AuthDebug /></div>}
             </div>
           );
         }
 
         // Authenticated and has appropriate permissions
-        return <Component />;
+        return (
+          <>
+            <Component />
+            {debugMode && (
+              <div className="fixed bottom-4 right-4 z-50">
+                <AuthDebug />
+              </div>
+            )}
+          </>
+        );
       }}
     </Route>
   );

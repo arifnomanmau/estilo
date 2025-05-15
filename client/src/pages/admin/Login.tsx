@@ -3,9 +3,10 @@ import { apiRequest } from "@/lib/queryClient";
 import { API_PATHS } from "@/lib/config";
 import { z } from "zod";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { LoginDebug } from "@/components/LoginDebug";
+import { AuthDebug } from "@/components/AuthDebug";
 import { motion } from "framer-motion";
 import { Lock, User, LogIn } from "lucide-react";
 import { useState } from "react";
@@ -19,7 +20,7 @@ type FormValues = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const { loginMutation } = useAuth();
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -42,56 +43,68 @@ export default function Login() {
       console.log("Attempting login with:", validatedData.username);
       console.log("Using login endpoint:", API_PATHS.LOGIN);
       
-      // Test direct API call first to debug
       try {
-        const directResponse = await apiRequest("POST", API_PATHS.LOGIN, validatedData);
-        console.log("Direct API login response:", directResponse);
-      } catch (directError) {
-        console.error("Direct API login failed:", directError);
-      }
-      
-      // Now try through the auth hook
-      const result = await loginMutation.mutateAsync(validatedData);
-      
-      console.log("Login result:", result);
-      
-      if (result && result.isAdmin) {
-        console.log("Admin login successful, navigating to dashboard");
+        // Try logging in through the auth hook - this should set all user data correctly
+        const result = await loginMutation.mutateAsync(validatedData);
+        
+        console.log("Login result:", result);
+        
+        if (result && result.isAdmin) {
+          console.log("Admin login successful, navigating to dashboard");
+          toast({
+            title: "Login successful",
+            description: "Welcome to the admin dashboard",
+          });
+          
+          // Set a timeout to ensure state has time to update
+          setTimeout(() => {
+            // Force refresh the stored user data
+            localStorage.setItem('user', JSON.stringify(result));
+            // Navigate to the admin page
+            navigate("/admin");
+          }, 100);
+        } else {
+          console.error("User is not an admin:", result);
+          setErrorMessage("You must be an admin to access this page");
+          toast({
+            title: "Access denied",
+            description: "You must be an admin to access this page",
+            variant: "destructive",
+          });
+        }
+      } catch (loginError: any) {
+        console.error("Login mutation error:", loginError);
+        
+        // Show helpful error messages based on the error
+        let errorMsg = loginError.message || "Login failed. Please check your credentials.";
+        
+        if (errorMsg.includes("401")) {
+          errorMsg = "Invalid username or password.";
+        } else if (errorMsg.includes("500")) {
+          errorMsg = "Server error. Please try again later.";
+        } else if (errorMsg.includes("Network") || errorMsg.includes("fetch")) {
+          errorMsg = "Network error. Please check your connection.";
+        }
+        
+        setErrorMessage(errorMsg);
         toast({
-          title: "Login successful",
-          description: "Welcome to the admin dashboard",
-        });
-        navigate("/admin/dashboard");
-      } else {
-        console.error("User is not an admin:", result);
-        setErrorMessage("You must be an admin to access this page");
-        toast({
-          title: "Access denied",
-          description: "You must be an admin to access this page",
+          title: "Login failed",
+          description: errorMsg,
           variant: "destructive",
         });
       }
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('Form validation error:', error);
       
-      // Extract a meaningful error message
-      let message = "Invalid username or password";
-      if (error.message) {
-        if (error.message.includes("401")) {
-          message = "Invalid username or password";
-        } else if (error.message.includes("500")) {
-          message = "Server error. Please try again later.";
-        } else if (error.message.includes("404")) {
-          message = "Login service unavailable. Please check the API configuration.";
-        } else {
-          message = error.message;
-        }
+      let errorMsg = "Invalid input. Please check your entries.";
+      if (error.errors && error.errors.length > 0) {
+        errorMsg = error.errors[0].message;
       }
       
-      setErrorMessage(message);
+      setErrorMessage(errorMsg);
       toast({
-        title: "Login failed",
-        description: message,
+        title: "Validation error",
+        description: errorMsg,
         variant: "destructive",
       });
     } finally {
@@ -213,6 +226,9 @@ export default function Login() {
           {process.env.NODE_ENV !== 'production' && (
             <div className="px-8 py-4 bg-gray-50 border-t border-gray-100">
               <LoginDebug />
+              <div className="mt-4">
+                <AuthDebug />
+              </div>
             </div>
           )}
         </motion.div>

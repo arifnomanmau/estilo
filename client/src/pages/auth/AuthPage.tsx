@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AuthDebug } from "@/components/AuthDebug";
 
 const authSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -149,6 +150,12 @@ export default function AuthPage() {
                 </Tabs>
               </CardContent>
             </Card>
+            
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-4">
+                <AuthDebug />
+              </div>
+            )}
           </div>
 
           <div className="hidden md:block">
